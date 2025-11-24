@@ -1,30 +1,30 @@
-/*==================== Header Files =========================-*/
+/* Header Files*/
 #include "WiFiS3.h"
 #include "Arduino_LED_Matrix.h"
-/*=====================Macros============================-*/
-/*-------------------------------- Pin Definitions -------------------------------------------*/
+/*Macros*/
+/*Pin Definitions */
 #define Smoke_sensor 2
 #define Flame_sensor 6
 #define Green_led 3
 #define Red_led 5
 #define Buzzer 4
-/*=================Object Instantiation ========================-*/
+/*Object Instantiation*/
 ArduinoLEDMatrix matrix;  
-/*=====================Global variables=======================-*/
-/* --------------------- WiFi Credentials and WiFi status -----------------------------------*/
+/*Global variables*/
+/* WiFi Credentials and WiFi status*/
 const char *ssid = "Semicon Media";      //Your WiFi Router SSID
 const char *password = "xxxxxxxxxx";   // Your WiFi Router password
 int status = WL_IDLE_STATUS;             // Connection status
-/* ---------------------- API credentials and SMS Details ---------------------- */
+/* API credentials and SMS Details*/
 const char* apiKey = "xxxxxxxxx";          // Replace with your API key
 const char* templateID = "101";           // Replace with your template ID
 const char* mobileNumber = "91xxxxxxxxxx"; // Replace with the recipient's mobile number with country code (eg : 91XXXXXXXXXX)
 const char* var1 = "house";   // Replace with your custom variable
 const char* var2 = "FIRE EMERGENCY. Evacuate now!";          // Replace with your custom variable
-/* ---------------------- Network Led icons ---------------------- */
+/*Network Led icons */
 const uint32_t network_connect_icon[] = { 0x308311, 0xba1b4db0, 0xdb6db6db };
 const uint32_t network_disconnect_icon[] = { 0x3003a1, 0xb41badb0, 0xdb6db6db };
-/* ---------------------- Network connection animation ---------------------- */
+/*Network connection animation */
 const uint32_t network_connection_anime[][4] = {
  { 0x0, 0x0, 0x0, 600 },
     { 0x0, 0x0, 0x600600, 600 },
@@ -32,11 +32,11 @@ const uint32_t network_connection_anime[][4] = {
     { 0x1, 0x80180d80, 0xd86d86d8, 600 },
     { 0x300301, 0xb01b0db0, 0xdb6db6db, 660}
 };
-/* ---------------------- Sensor Ststus Variables ---------------------- */
+/* Sensor Ststus Variables */
 bool flame_status = false;
 bool smoke_status = true;
-/*======================== User Defined Functions =============================-*/
-/* --------------------------- WiFi connect Function --------------------------- */
+/*User Defined Functions */
+/* WiFi connect Function */
 void wifi_connect(){
  if (WiFi.status() == WL_NO_MODULE) {
    Serial.println("Communication with WiFi module failed!");
@@ -56,14 +56,14 @@ void wifi_connect(){
  Serial.print("IP Address: ");
  Serial.println(WiFi.localIP());
 }
-/* ------------------------ WiFi reconnect Function ----------------------------- */
+/* WiFi reconnect Function */
 void wifi_reconnect(){
    Serial.println("Wifi Reconnecting........");
    matrix.loadFrame(network_disconnect_icon);
    delay(6000);
    wifi_connect();
 }
-/* ------------------------ Fire & Smoke detect Function ------------------------- */
+/* Fire & Smoke detect Function*/
 bool fire_smoke_detect(){
  flame_status = digitalRead(Flame_sensor);
  smoke_status = digitalRead(Smoke_sensor);
@@ -74,7 +74,7 @@ bool fire_smoke_detect(){
     return false;
  }
 }
-/* ------------------------ SMS Trigger Function ---------------------------------- */
+/* SMS Trigger Function  */
 void trigger_SMS(){
   if (WiFi.status() == WL_CONNECTED) {
    WiFiClient client; // Initialize WiFi client
@@ -127,7 +127,7 @@ void trigger_SMS(){
    Serial.println("WiFi not connected!");
  }
 }
-/* -------------------------- Alarm Trigger Function ----------------------------- */
+/*Alarm Trigger Function */
 void trigger_Alarm(){
    static unsigned long prevmillis = 0;
    static bool buzzer_state = false;
@@ -141,8 +141,8 @@ void trigger_Alarm(){
        digitalWrite(Buzzer, buzzer_state);
     }
 }
-/*=============================== Main Functions =============================-*/
-/* ------------------------- Setup Function --------------------------------*/
+/*Main Functions */
+/* Setup Function*/
 void setup() {
    //Initialize serial and wait for port to open:
  Serial.begin(9600);
@@ -158,7 +158,7 @@ void setup() {
  digitalWrite(Red_led, LOW);
  digitalWrite(Buzzer, LOW);
 }
-/* ---------------------------- Loop Function ---------------------------------- */
+/* Loop Function */
 void loop() {
    if(WiFi.status() != WL_CONNECTED){
        wifi_reconnect();
