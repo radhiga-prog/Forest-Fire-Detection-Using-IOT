@@ -1,83 +1,39 @@
 #include <DHT.h>
-#include <ESP8266WiFi.h>
 
-#define DHTPIN 2
-#define DHTTYPE DHT11
-#define MQ2 A0
-#define FLAME 3
-#define BUZZER 4
-
-String apiKey = "YOUR_THINGSPEAK_API_KEY"; 
-const char* ssid = "YOUR_WIFI_NAME"; 
-const char* password = "YOUR_WIFI_PASSWORD";
-
-const char* server = "api.thingspeak.com";
-
+#define DHTPIN 2        // DHT sensor pin
+#define DHTTYPE DHT11   // Or DHT22
 DHT dht(DHTPIN, DHTTYPE);
-WiFiClient client;
+
+int smokeSensor = A0;   // MQ-2 analog pin
+int buzzer = 8;         // Buzzer pin
+int led = 7;            // LED pin
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   dht.begin();
-  
-  pinMode(MQ2, INPUT);
-  pinMode(FLAME, INPUT);
-  pinMode(BUZZER, OUTPUT);
-
-  Serial.println("Connecting to WiFi...");
-  WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  
-  Serial.println("\nWiFi Connected!");
+  pinMode(smokeSensor, INPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(led, OUTPUT);
 }
 
 void loop() {
   float temp = dht.readTemperature();
-  float humidity = dht.readHumidity();
-  int smoke = analogRead(MQ2);
-  int flame = digitalRead(FLAME);
+  int smokeLevel = analogRead(smokeSensor);
 
-  Serial.print("Temp: "); Serial.print(temp);
-  Serial.print(" Humidity: "); Serial.print(humidity);
-  Serial.print(" Smoke: "); Serial.print(smoke);
-  Serial.print(" Flame: "); Serial.println(flame);
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.print(" °C | Smoke Level: ");
+  Serial.println(smokeLevel);
 
-  // 🔥 Fire Condition
-  if (temp > 45 || smoke > 300 || flame == LOW) {
-    digitalWrite(BUZZER, HIGH);
-    Serial.println("🔥 Fire Detected!");
+  // Fire detection condition
+  if (temp > 45 || smokeLevel > 300) {
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(led, HIGH);
+    Serial.println("🔥 FIRE ALERT!");
   } else {
-    digitalWrite(BUZZER, LOW);
+    digitalWrite(buzzer, LOW);
+    digitalWrite(led, LOW);
   }
 
-  // 📡 Send Data to ThingSpeak
-  if (client.connect(server, 80)) {
-    String postStr = apiKey;
-    postStr += "&field1=";
-    postStr += String(temp);
-    postStr += "&field2=";
-    postStr += String(humidity);
-    postStr += "&field3=";
-    postStr += String(smoke);
-    postStr += "&field4=";
-    postStr += String(flame);
-    postStr += "\r\n\r\n";
-
-    client.print("POST /update HTTP/1.1\n");
-    client.print("Host: api.thingspeak.com\n");
-    client.print("Connection: close\n");
-    client.print("X-THINGSPEAKAPIKEY: " + apiKey + "\n");
-    client.print("Content-Type: application/x-www-form-urlencoded\n");
-    client.print("Content-Length: ");
-    client.print(postStr.length());
-    client.print("\n\n");
-    client.print(postStr);
-  }
-
-  client.stop();
-  delay(15000);  // ThingSpeak delay
+  delay(1000);
 }
